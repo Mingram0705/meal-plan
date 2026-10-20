@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meal Plan">
+<meta name="application-name" content="Meal Plan">
+<meta name="theme-color" content="#ea580c" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1917" media="(prefers-color-scheme: dark)">
+<title>Meal Plan</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--accent:#ea580c;--accent2:#dc2626;--bg:#fafaf9;--card:#fff;--text:#1c1917;--muted:#78716c;--line:#e7e5e4;--done:#16a34a;--chip:#fff7ed}
+@media (prefers-color-scheme:dark){:root{--bg:#0c0a09;--card:#1c1917;--text:#f5f5f4;--muted:#a8a29e;--line:#292524;--accent:#fb923c;--accent2:#f87171;--done:#4ade80;--chip:#2a1a10}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:17px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,#f97316,#dc2626);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 16px 0}
+header h1{margin:0 0 2px;font-size:21px}
+header .sub{font-size:13px;opacity:.9;margin-bottom:10px}
+nav{display:flex;gap:4px}
+nav button{flex:1;border:0;background:transparent;color:#fff;opacity:.8;font:600 15px/1 inherit;font-family:inherit;padding:12px 4px 14px;border-bottom:3px solid transparent;min-height:48px}
+nav button.on{opacity:1;border-bottom-color:#fff}
+main{padding:14px 14px calc(env(safe-area-inset-bottom) + 90px);max-width:640px;margin:0 auto}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card h2{margin:0 0 4px;font-size:19px}
+.card h3{margin:14px 0 6px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.meta{color:var(--muted);font-size:14px}
+.progress{margin-bottom:12px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#f97316,#dc2626);width:0;transition:width .25s}
+label.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 4px;border-top:1px solid var(--line);cursor:pointer}
+label.row:first-of-type{border-top:0}
+label.row input{position:absolute;opacity:0;pointer-events:none}
+.box{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--muted);display:grid;place-items:center;transition:all .15s}
+.box::after{content:"";width:8px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px);opacity:0}
+input:checked+.box{background:var(--done);border-color:var(--done)}
+input:checked+.box::after{opacity:1}
+input:checked~.txt{color:var(--muted);text-decoration:line-through}
+input:focus-visible+.box{outline:3px solid var(--accent);outline-offset:2px}
+.txt{flex:1}
+.txt small{display:block;color:var(--muted);font-size:13px;text-decoration:none}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--chip);color:var(--accent);margin-right:6px}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline}
+.day.alldone{border-color:var(--done)}
+.day.alldone h2::after{content:" ✓";color:var(--done)}
+.recipe-link{border:0;background:none;color:var(--accent);font:inherit;font-size:14px;padding:6px 0;text-decoration:underline}
+.tip{background:var(--chip);border-color:transparent}
+.tip b{color:var(--accent)}
+.note{font-size:14px;color:var(--muted);margin:6px 0 0}
+.empty{color:var(--done);font-weight:600;padding:8px 4px}
+.reset{display:block;width:100%;min-height:52px;border:2px solid var(--accent2);color:var(--accent2);background:transparent;border-radius:14px;font:600 16px inherit;font-family:inherit;margin-top:20px}
+.reset:active{background:var(--accent2);color:#fff}
+.mini{border:0;background:none;color:var(--accent);font:600 14px inherit;font-family:inherit;padding:8px 0;min-height:40px}
+.section-h{margin:20px 4px 10px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.batch{border:2px solid var(--accent)}
+.count{float:right;font-size:14px;color:var(--muted);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>My Meal Plan</h1>
+  <div class="sub">2 meals a day · ~1,900 cal (estimates)</div>
+  <nav>
+    <button data-tab="week" class="on">Week</button>
+    <button data-tab="recipes">Recipes</button>
+    <button data-tab="pantry">Pantry</button>
+  </nav>
+</header>
+<main>
+  <section id="week" class="on"></section>
+  <section id="recipes"></section>
+  <section id="pantry"></section>
+  <button class="reset" id="reset">Reset week</button>
+</main>
+<script>
+(function(){
+"use strict";
+var KEY="michael-meal-app-v1";
+var MEALS={
+  A:{name:"Rice bowl",cal:950,
+    ing:["1 rice bowl portion (from batch)","Handful frozen mixed veg","1 microwave rice pouch (250g)","1.5 tbsp Kewpie"],
+    steps:["Reheat 1 rice bowl portion with a handful of frozen veg (2–3 min).","Heat 1 microwave rice pouch per the packet.","Spoon the mince over the rice and top with 1.5 tbsp Kewpie."]},
+  B:{name:"Spaghetti bolognese",cal:920,
+    ing:["140g spaghetti","1 bolognese portion (from batch)","Salt for the pasta water"],
+    steps:["Boil 140g spaghetti in salted water for 9–11 min, then drain.","Reheat 1 bolognese portion and toss it through the spaghetti."]},
+  C:{name:"Mince wraps",cal:950,
+    note:"Protein wraps are lighter, so this may come in under — add a 3rd wrap if you're hungry.",
+    ing:["1 wrap portion (from batch)","2 protein wraps","Lettuce","1 Roma tomato","20g grated cheese","1.5 tbsp Kewpie"],
+    steps:["Reheat 1 wrap portion.","Warm 2 protein wraps in the microwave for 10 s.","Fill with shredded lettuce, diced tomato, 20g cheese and a line of Kewpie, then roll up."]}
+};
+var BATCH={
+  ing:["3kg extra lean beef mince (6 × 500g packs)","2 brown onions","2 tbsp minced garlic","Salt and pepper","4–5 tbsp soy sauce","2 × 700g bottles passata","2 × Old El Paso taco spice mix packets","About ½ cup water","14 containers + labels"],
+  steps:["Dice 2 brown onions. Brown all 3kg extra lean mince in a big pan or pot in 3 lots (don't crowd the pan), adding the onion and 2 tbsp minced garlic to the first lot. Season with salt and pepper.",
+    "Split the cooked mince into three batches: 5 portions for rice bowls, 4 for bolognese, 5 for wraps (14 roughly equal portions).",
+    "Rice bowl batch: stir through 4–5 tbsp soy sauce.",
+    "Bolognese batch: back in the pan with both 700g bottles of passata, simmer 10 min until thick.",
+    "Wrap batch: back in the pan with both Old El Paso packets and about ½ cup water, simmer 3 min.",
+    "Cool, then pack into 14 containers and label them. Keep 3 days' worth in the fridge and freeze the rest; move the next day's from the freezer to the fridge each night."]
+};
+var TOTALS={AB:"~1,875",AC:"~1,905",BC:"~1,870"};
+var WEEK=[["Mon","A","B"],["Tue","C","A"],["Wed","B","C"],["Thu","A","B"],["Fri","C","A"],["Sat","B","C"],["Sun","A","C"]];
+var PANTRY=[
+  ["Heart Smart Extra Lean Beef Mince 500g","×6"],
+  ["Microwave rice pouches","already have"],
+  ["Woolworths Spaghetti 500g","×2"],
+  ["Simson's Pantry Low Carb High Protein & Fibre Wraps 6pk","×2"],
+  ["Macro Organic Passata 700g","×2"],
+  ["Kewpie Japanese Mayonnaise 500g","×1"],
+  ["Woolworths Tasty Shredded Cheese 250g","×1"],
+  ["Essentials Frozen Mixed Vegetables 1kg","×1"],
+  ["Old El Paso Mild Taco Spice Mix 30g","×2"],
+  ["Iceberg lettuce","×1"],
+  ["Roma tomatoes","×5"],
+  ["Woolworths Brown Onions 1kg","×1"],
+  ["Tiao Hu Soy Sauce 500ml","×1"],
+  ["Woolworths Minced Garlic 250g","×1"]
+];
+var state={};
+try{state=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){state={};}
+if(!state.checks)state.checks={};
+if(!state.checks.hasOwnProperty("p1"))state.checks.p1=true; // rice already on hand
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function row(id,text,sub){
+  return '<label class="row"><input type="checkbox" data-id="'+id+'"'+(state.checks[id]?" checked":"")+
+    '><span class="box"></span><span class="txt">'+esc(text)+(sub?'<small>'+esc(sub)+'</small>':"")+'</span></label>';
+}
+function renderWeek(){
+  var h='<div class="card progress"><b id="wkcount"></b><div class="bar"><i id="wkbar"></i></div></div>';
+  WEEK.forEach(function(d,i){
+    var key=[d[1],d[2]].sort().join("");
+    h+='<div class="card day" id="day'+i+'"><div class="dayhead"><h2>'+d[0]+'</h2><span class="meta">'+TOTALS[key]+' cal est.</span></div>';
+    [1,2].forEach(function(n){
+      var m=d[n];
+      h+=row("w"+i+"_"+n,"Meal "+n+": "+MEALS[m].name,"Meal "+m+" · ~"+MEALS[m].cal+" cal est. · tick when done");
+    });
+    h+='</div>';
+  });
+  document.getElementById("week").innerHTML=h;
+}
+function renderRecipes(){
+  var h='<div class="card batch" id="rX"><h2><span class="tag">Cook once</span>Batch cook day</h2>'+
+    '<div class="meta">Makes all 14 meals\' mince in one go</div>'+
+    '<p class="note">Cooked mince is best eaten within 3–4 days from the fridge, which is why the rest gets frozen.</p>'+
+    '<h3>You\'ll need <span class="count" id="ciX"></span></h3>';
+  BATCH.ing.forEach(function(t,j){h+=row("bXi"+j,t,"");});
+  h+='<h3>Method <span class="count" id="csX"></span></h3>';
+  BATCH.steps.forEach(function(t,j){h+=row("bXs"+j,(j+1)+". "+t,"");});
+  h+='<button class="mini" data-clear="X">Clear method ticks</button></div>';
+  h+='<h3 class="section-h">Each day</h3>';
+  Object.keys(MEALS).forEach(function(k){
+    var m=MEALS[k];
+    h+='<div class="card" id="r'+k+'"><h2><span class="tag">Meal '+k+'</span>'+esc(m.name)+'</h2><div class="meta">~'+m.cal+' cal (estimate)</div>';
+    if(m.note)h+='<p class="note">'+esc(m.note)+'</p>';
+    h+='<h3>Ingredients <span class="count" id="ci'+k+'"></span></h3>';
+    m.ing.forEach(function(t,j){h+=row("r"+k+"i"+j,t,"");});
+    h+='<h3>Steps <span class="count" id="cs'+k+'"></span></h3>';
+    m.steps.forEach(function(t,j){h+=row("r"+k+"s"+j,(j+1)+". "+t,"");});
+    h+='<button class="mini" data-clear="'+k+'">Clear step ticks</button></div>';
+  });
+  document.getElementById("recipes").innerHTML=h;
+}
+function renderPantry(){
+  var need='',have='';
+  PANTRY.forEach(function(p,i){
+    var r=row("p"+i,p[0],p[1]);
+    if(state.checks["p"+i])have+=r;else need+=r;
+  });
+  document.getElementById("pantry").innerHTML=
+    '<div class="card"><h2>Still need</h2><div class="meta">Tick when you have it</div>'+(need||'<div class="empty">All sorted — you\'ve got everything!</div>')+'</div>'+
+    '<div class="card"><h2>Got it</h2>'+(have||'<div class="meta">Nothing ticked yet</div>')+'</div>';
+}
+function updateCounts(){
+  var done=0,total=WEEK.length*2;
+  WEEK.forEach(function(d,i){
+    var a=state.checks["w"+i+"_1"],b=state.checks["w"+i+"_2"];
+    done+=(a?1:0)+(b?1:0);
+    var el=document.getElementById("day"+i);if(el)el.classList.toggle("alldone",!!(a&&b));
+  });
+  var c=document.getElementById("wkcount");if(c)c.textContent=done+" of "+total+" meals done";
+  var bar=document.getElementById("wkbar");if(bar)bar.style.width=(done/total*100)+"%";
+  Object.keys(MEALS).forEach(function(k){
+    var m=MEALS[k],hi=0,sd=0;
+    m.ing.forEach(function(_,j){if(state.checks["r"+k+"i"+j])hi++;});
+    m.steps.forEach(function(_,j){if(state.checks["r"+k+"s"+j])sd++;});
+    var a=document.getElementById("ci"+k);if(a)a.textContent=hi+"/"+m.ing.length+" have";
+    var b=document.getElementById("cs"+k);if(b)b.textContent=sd+"/"+m.steps.length+" done";
+  });
+  var bi=0,bs=0;
+  BATCH.ing.forEach(function(_,j){if(state.checks["bXi"+j])bi++;});
+  BATCH.steps.forEach(function(_,j){if(state.checks["bXs"+j])bs++;});
+  var x=document.getElementById("ciX");if(x)x.textContent=bi+"/"+BATCH.ing.length+" have";
+  var y=document.getElementById("csX");if(y)y.textContent=bs+"/"+BATCH.steps.length+" done";
+}
+function renderAll(){renderWeek();renderRecipes();renderPantry();updateCounts();}
+document.addEventListener("change",function(e){
+  var t=e.target;if(!t.dataset||!t.dataset.id)return;
+  state.checks[t.dataset.id]=t.checked;save();
+  if(t.dataset.id.charAt(0)==="p")setTimeout(renderPantry,250);
+  updateCounts();
+});
+document.addEventListener("click",function(e){
+  var t=e.target;
+  if(t.dataset&&t.dataset.tab)showTab(t.dataset.tab);
+  if(t.dataset&&t.dataset.clear){
+    var k=t.dataset.clear;
+    if(k==="X")BATCH.steps.forEach(function(_,j){delete state.checks["bXs"+j];});
+    else MEALS[k].steps.forEach(function(_,j){delete state.checks["r"+k+"s"+j];});
+    save();renderRecipes();updateCounts();
+  }
+});
+function showTab(name){
+  document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.tab===name);});
+  document.querySelectorAll("section").forEach(function(s){s.classList.toggle("on",s.id===name);});
+  state.tab=name;save();window.scrollTo(0,0);
+}
+document.getElementById("reset").addEventListener("click",function(){
+  if(confirm("Reset the week? This clears every tick (meals, recipes and pantry).")){
+    state={checks:{p1:true},tab:state.tab};save();renderAll();
+  }
+});
+renderAll();
+if(state.tab&&document.getElementById(state.tab))showTab(state.tab);
+})();
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
+</body>
+</html>
