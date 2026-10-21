@@ -60,6 +60,47 @@ input:focus-visible+.box{outline:3px solid var(--accent);outline-offset:2px}
 .section-h{margin:20px 4px 10px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .batch{border:2px solid var(--accent)}
 .count{float:right;font-size:14px;color:var(--muted);font-weight:600}
+.ix-cam{display:none;position:relative;margin:12px 0 4px;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3}
+.ix-cam.on{display:block}
+.ix-cam video{width:100%;height:100%;object-fit:cover;display:block}
+.ix-aim{position:absolute;left:10%;right:10%;top:30%;bottom:30%;border:3px solid rgba(255,255,255,.9);border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.25)}
+.ix-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ix-btn{flex:1 1 140px;display:flex;align-items:center;justify-content:center;min-height:48px;padding:10px 14px;border:2px solid var(--accent);border-radius:14px;background:transparent;color:var(--accent);font-family:inherit;font-size:16px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
+.ix-btn.pri{background:linear-gradient(135deg,#f97316,#dc2626);border-color:transparent;color:#fff}
+.ix-btn.sm{flex:0 0 auto;min-height:48px}
+.ix-btn:active{opacity:.75}
+.ix-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.ix-row input{flex:1;min-width:0;min-height:48px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);font-family:inherit;font-size:16px}
+.ix-row input:focus{outline:2px solid var(--accent);border-color:transparent}
+.ix-status{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--chip);font-size:15px}
+.ix-status.warn{color:var(--accent2)}
+.ix-big{font-size:17px;margin-top:6px}.ix-big b{font-size:34px;letter-spacing:-.02em}
+.ix-bar{height:14px}.ix-bar.over i{background:var(--accent2)}
+.ix-left{margin-top:6px;font-weight:700;color:var(--done)}.ix-left.over{color:var(--accent2)}
+.ix-prod{display:flex;gap:12px;align-items:flex-start}
+.ix-prod img{width:84px;height:84px;object-fit:contain;border-radius:10px;background:#fff;flex:none}
+.ix-facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ix-facts span{font-size:13px;font-weight:600;padding:4px 8px;border-radius:999px;background:var(--chip);color:var(--accent)}
+.ix-seg{display:flex;border:2px solid var(--accent);border-radius:12px;overflow:hidden}
+.ix-seg button{flex:1;min-height:44px;border:0;background:transparent;color:var(--accent);font-family:inherit;font-size:15px;font-weight:600}
+.ix-seg button.on{background:var(--accent);color:#fff}
+.ix-calc{margin-top:10px;font-size:18px}
+.ix-src{margin-top:10px;font-size:12px}
+.ix-meals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.ix-meal{min-height:64px;border:1px solid var(--line);border-radius:12px;background:var(--chip);color:var(--text);font-family:inherit;font-size:14px;line-height:1.25;padding:8px 6px}
+.ix-meal b{display:block}.ix-meal small{color:var(--accent);font-weight:600}
+.ix-meal:active{border-color:var(--accent)}
+.ix-entry{display:flex;align-items:center;gap:10px;min-height:52px;border-top:1px solid var(--line);padding:6px 0}
+.ix-entry:first-of-type{border-top:0}
+.ix-entry.sm{min-height:40px;font-size:15px}
+.ix-del{flex:none;width:40px;height:40px;border:0;border-radius:10px;background:var(--chip);color:var(--accent2);font-family:inherit;font-size:22px;font-weight:600;line-height:1}
+.ix-day{border-top:1px solid var(--line);padding:4px 0}
+.ix-day summary{display:flex;justify-content:space-between;min-height:44px;align-items:center;cursor:pointer;list-style:none;font-weight:600}
+.ix-day summary::-webkit-details-marker{display:none}
+.ix-day summary .over{color:var(--accent2)}
+.ix-toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translate(-50%,20px);background:var(--done);color:#fff;font-weight:700;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .2s;z-index:20}
+.ix-toast.on{opacity:1;transform:translate(-50%,0)}
+body.on-scan .reset{display:none}
 </style>
 </head>
 <body>
@@ -70,14 +111,19 @@ input:focus-visible+.box{outline:3px solid var(--accent);outline-offset:2px}
     <button data-tab="week" class="on">Week</button>
     <button data-tab="recipes">Recipes</button>
     <button data-tab="pantry">Pantry</button>
+    <button data-tab="scan">Scan</button>
   </nav>
 </header>
 <main>
   <section id="week" class="on"></section>
   <section id="recipes"></section>
   <section id="pantry"></section>
+  <section id="scan"></section>
   <button class="reset" id="reset">Reset week</button>
 </main>
+<script src="vendor/zxing-browser.min.js" defer></script>
+<script src="upce.js"></script>
+<script src="intake.js"></script>
 <script>
 (function(){
 "use strict";
@@ -218,15 +264,22 @@ document.addEventListener("click",function(e){
 function showTab(name){
   document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.tab===name);});
   document.querySelectorAll("section").forEach(function(s){s.classList.toggle("on",s.id===name);});
-  state.tab=name;save();window.scrollTo(0,0);
+  document.body.classList.toggle("on-scan",name==="scan");
+  try{localStorage.setItem("meal-intake-lasttab-v1",name==="scan"?"scan":"");}catch(e){}
+  if(window.Intake){if(name==="scan")Intake.show();else Intake.hide();}
+  if(name!=="scan"){state.tab=name;save();}
+  window.scrollTo(0,0);
 }
 document.getElementById("reset").addEventListener("click",function(){
   if(confirm("Reset the week? This clears every tick (meals, recipes and pantry).")){
     state={checks:{p1:true},tab:state.tab};save();renderAll();
   }
 });
+if(window.Intake)Intake.init(MEALS);
 renderAll();
-if(state.tab&&document.getElementById(state.tab))showTab(state.tab);
+var lastTab="";try{lastTab=localStorage.getItem("meal-intake-lasttab-v1")||"";}catch(e){}
+if(lastTab==="scan")showTab("scan");
+else if(state.tab&&document.getElementById(state.tab))showTab(state.tab);
 })();
 </script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
